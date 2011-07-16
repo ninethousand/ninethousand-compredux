@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Compredux" default="help">
+
+    <!-- Imports -->
+    <import file="${project.basedir}/build/build.xml" />
+
+    <!-- Required properties -->
+    <property name="docs.destdir" value="${project.basedir}/docs-dev" />
+    <property name="docs.appdir" value="${project.basedir}/download-dev" />
+    <property name="docs.defaultpackage" value="Compredux" />
+    <property name="docs.appdir"         value="${project.basedir}/src" />
+    <property name="docs.library"        value="${project.basedir}/src" />
+    <property name="script" value="./build.sh" />
+    <property name="version.to" value="jesse@ninethousand.org" />
+    <property name="version.from" value="ninethousand.org" />
+
+    <!-- Main Targets -->
+    <target name="help"
+            depends="modules.help"
+            description="This help Menu." />
+
+    <target name="build"
+            depends="docs.do, buildscript"
+            description="Main Build Routine." />
+
+    <target name="release"
+            depends="release.properties, release.increment, docs.do, buildscript" 
+            description="Executes a release." />
+
+    <target name="release.properties" >
+        <property name="docs.destdir" value="${project.basedir}/docs" override="true" />
+        <property name="docs.appdir" value="${project.basedir}/download" override="true" />
+        <property name="script" value="./build.sh release" override="true" />
+    </target>
+
+    <target name="release.increment" >
+        <if>
+            <not>
+                <isset property="version" />
+            </not>
+            <then>
+                <property file="VERSION" />
+                <php function="strpos" returnProperty="dot" >
+                    <param value="${version}" />
+                    <param value="." />
+                </php>
+                <php expression="${dot} + 1" returnProperty="dotplusone" />
+                <php function="substr" returnProperty="major" >
+                    <param value="${version}" />
+                    <param value="0" />
+                    <param value="${dot}" />
+                </php>
+                <php function="substr" returnProperty="minor" >
+                    <param value="${version}" />
+                    <param value="${dotplusone}" />
+                </php>
+                <php expression="${minor} + 1" returnProperty="newminor" />
+                <php function="sprintf" returnProperty="version" >
+                    <param value="%d.%s" />
+                    <param value="${major}" />
+                    <param value="${newminor}" />
+                </php>
+            </then>
+        </if>
+        <if>
+            <not>
+                <isset property="noincrement" />
+            </not>
+        <then>
+            <echo file="VERSION" append="false" msg="version=${version}" />
+        </then>
+        </if>
+    </target>
+
+    <target name="buildscript" >
+        <exec command="${script}" dir="${project.basedir}" outputProperty="scriptout" />
+        <echo msg="${scriptout}" />
+    </target>
+        
+
+</project>
