@@ -1,5 +1,5 @@
 <?php
-namespace Compredux;
+namespace NineThousand\Compredux;
 /**
  * CompRedux main class file.
  * This file contains the codebase of the main Compredux engine.
@@ -12,7 +12,7 @@ namespace Compredux;
  * Client class
  * You can pass an option array to the constructor
  * The options array will merge and overwrite the default options
- * $client = new Compredux\Client($options);
+ * $client = new NineThousand\Compredux\Client($options);
  * @package Compredux
  */
 use Zend\Dom\Query;
@@ -237,9 +237,9 @@ class Client
                     if (!is_array($selector)) {
                         $selector = array($selector);
                     }
-                    $composite = new DomDocument;
+                    $composite = new \DomDocument;
                     foreach ($selector as $selection) {
-                        $results = $this->dom->query($selection);
+                        $results = $this->dom->execute($selection);
                         foreach ($results as $result) {
                             $composite->appendChild($composite->importNode($result, true));
                         }
@@ -256,11 +256,11 @@ class Client
                     }
                     
                     foreach ($exclude as $antiSelection) {
-                        $results = $this->dom->query($antiSelection);
+                        $results = $this->dom->execute($antiSelection);
                         foreach ($results as $result) {
-                            $antiComposite = new DomDocument;
+                            $antiComposite = new \DomDocument;
                             $antiComposite->appendChild($antiComposite->importNode($result, true));
-                            $content = str_replace($antiComposite->saveHTML(), '', $content);
+                            $content = str_replace(trim($antiComposite->saveHTML()), '', $content);
                             unset($antiComposite);
                         }
                         unset($results);
@@ -394,7 +394,7 @@ class Client
         } else {
             $host = $_SERVER['SERVER_NAME'];
         }
-        return 'http://'.$host.$this->getController();
+        return 'http://'.$host.'/'.$this->getController();
     }
 
     /**
@@ -631,7 +631,7 @@ class Client
     {
         $content = $this->swapHosts($content);
         $content = $this->stripRootReference($content);
-        $content = $this->filterEduDirectImages($content);
+        $content = $this->shuntPath($content);
         return $content;
     }
 
@@ -666,17 +666,17 @@ class Client
 
         return $newcontent;
     }
-
+    
     /**
-     * Greps the content for a certain image host and replaces it with the local host
+     * Greps the content for a link beginning without the controller and suppliments the controller string
      * @param string $content
      * @return string
      */
-    public function filterEduDirectImages($content)
+    public function shuntPath($content) 
     {
-        $pattern = 'https://search.collegedegrees.com';
-        $replacement = $this->getHost().'/gallery';
-        $newcontent = preg_replace("/".addcslashes($pattern,'/')."/" , $replacement , $content );
+        $pattern = "/".addcslashes('<a href="(?!\#)','/')."/";
+        $replacement = '<a href="' . $this->getHost() ;
+        $newcontent = preg_replace($pattern , $replacement , $content );
         return $newcontent;
     }
 
