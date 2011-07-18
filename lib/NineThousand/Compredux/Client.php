@@ -124,6 +124,7 @@ class Client
         if ($this->response['header']['redirect_count'] > 0){
                 $cache = false;
                 preg_match_all("/location:(.*?)\n/is", $header, $locations);
+                $destination = trim(end($locations[1]));
                 
                 if ($this->options['mode'] == 'cherrypick') {
                     
@@ -140,7 +141,16 @@ class Client
                     $header_size = $this->response['header']['header_size'];
                     $header = substr($this->response['raw'], 0, $header_size);
                 } else {
-                    header("Location: " . $this->getHost() . trim(end($locations[1])));
+                    if (strpos($destination, 'http') !== false) {
+                        $urlparts = parse_url($destination);
+                        $destination = $urlparts['path'];
+                        if (!empty($urlparts['query'])) {
+                           $destination .= '?'.$urlparts['query'];
+                        }
+                    }
+                        
+                    $destination = $this->getHost() . $destination;
+                    header("Location: " . $destination);
                     exit();
                 }
                 
@@ -674,7 +684,7 @@ class Client
      */
     public function shuntPath($content) 
     {
-        $pattern = "/".addcslashes('<a href="(?!\#)','/')."/";
+        $pattern = "/".addcslashes('<a href="(?!http)','/')."/";
         $replacement = '<a href="' . $this->getHost() ;
         $newcontent = preg_replace($pattern , $replacement , $content );
         return $newcontent;
