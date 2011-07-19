@@ -162,6 +162,11 @@ class Client
             $cache = false;
             $this->response['content'] = $this->postProcess($this->response['content']);
         }
+        
+        //dont cache the page if errors were returned
+        if ($this->hasErrors()) {
+            $cache = false;
+        }
 
         $dom = new Query($this->response['content']);
         $this->setDom($dom);
@@ -356,6 +361,20 @@ class Client
     public function getDom()
     {
         return $this->dom;
+    }
+    
+    /**
+     * Gets the errors returned from the request
+     * 
+     * @return string
+     */
+    public function getErrors()
+    {
+        if (!empty($this->response['error'])) {
+            return $this->response['error'];
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -590,6 +609,19 @@ class Client
      */
     public function isType($type) {
         if (key(preg_grep("/$type/i", $this->response['headers'])) !== null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * Detects if errors were found in the response
+     * @return bool
+     */
+    public function hasErrors() {
+        
+        if (!empty($this->response['error'])) {
             return true;
         } else {
             return false;
