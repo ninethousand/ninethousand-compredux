@@ -577,6 +577,11 @@ class Client
      */
     private function getWebserverConfigs() 
     {
+        $server = str_replace(array('http://','https://'), '', $this->getServer());
+        if (false !== strpos($server, '/')) {
+            $pieces = explode('/', $server);
+            $server = $pieces[0];
+        }
         return array(
             'home_dir'     => realpath(dirname(__FILE__)),
             'curl_options' => array(
@@ -584,7 +589,7 @@ class Client
                 'CURLOPT_REFERER'   => $this->getHost(),
             ),
             'curl_headers' => array(
-                'Host: '.str_replace(array('http://','https://'), '', $this->getServer()),
+                'Host: '.$server,
                 'User-Agent: '.$_SERVER['HTTP_USER_AGENT'],
                 'X-Publisher-Id: '.$_SERVER['SERVER_NAME'],
             ),
@@ -684,7 +689,11 @@ class Client
      */
     public function swapHosts($content) 
     {
-        $pattern = "/".addcslashes($this->getServer(),'/')."/";
+        $server = $this->getServer();
+        if (substr($server, -1) !== '/') {
+            $server = $server . '/';
+        }
+        $pattern = "/".addcslashes($server,'/')."/";
         $replacement = $this->getHost();
         $newcontent = preg_replace($pattern , $replacement , $content );
         return $newcontent;
